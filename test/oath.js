@@ -18,8 +18,7 @@ describe('oath', function () {
   describe('Promise', function () {
     describe('.then', function () {
       it('should call then on a promise resolution', function (done) {
-        promiseTimeout(function () {}, 5)
-          .then(done);
+        promiseTimeout(function () {}, 5).then(done);
       });
 
       it('should pass a resolved value to then', function (done) {
@@ -131,6 +130,7 @@ describe('oath', function () {
         setTimeout(function () {
           defer.reject('Oops!');
         }, 5);
+        defer.promise.abc = 1;
         return defer.promise;
       };
 
@@ -139,6 +139,7 @@ describe('oath', function () {
         var defer = oath.defer();
         didItRun = true;
         setTimeout(_.partial(defer.resolve.bind(defer), num), 5);
+        defer.promise.abc = 2;
         return defer.promise;
       };
 
