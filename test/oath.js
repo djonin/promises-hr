@@ -65,6 +65,18 @@ describe('oath', function () {
             done();
           });
       });
+      it('should handle reject being called before catch', function(done) {
+        var failingStep = function () {
+          var defer = oath.defer();
+          defer.reject('Oops!');
+          return defer.promise;
+        };
+
+        failingStep().catch(function(err) {
+          expect(err).to.equal('Oops!');
+          done();
+        });
+      });
     });
   });
 
@@ -82,7 +94,7 @@ describe('oath', function () {
     };
 
     var promised = oath.promisify(nodeStyle);
-    xit('should call then on success', function (done) {
+    it('should call then on success', function (done) {
       promised(bigEnough)
         .then(function (message) {
           expect(message).to.equal('That\'s a big number!');
@@ -90,7 +102,7 @@ describe('oath', function () {
         });
     });
 
-    xit('should call catch on error', function (done) {
+    it('should call catch on error', function (done) {
       promised(tooSmall)
         .catch(function (message) {
           expect(message).to.equal('Not big enough!');
@@ -100,6 +112,7 @@ describe('oath', function () {
   });
 
   describe('chaining', function () {
+
     it('should allow you to chain promises using then', function (done) {
       var step1 = function (num) {
         return promiseTimeout(function () {
@@ -112,7 +125,7 @@ describe('oath', function () {
           return num + 20;
         }, 5);
       };
-
+ 
       step1(100).then(step2).then(function (num) {
         expect(num).to.equal(130);
         done();
@@ -148,5 +161,38 @@ describe('oath', function () {
         done();
       });
     });
+
+    it('should handle resolve being called before then', function(done) {
+      var step1 = function(num) {
+        var defer = oath.defer();
+        defer.resolve(num+10);
+        return defer.promise;
+      }
+      step1(100).then(function (num) {
+        expect(num).to.equal(110);
+        done();
+      });
+    });
+
+    it('should handle reject being called before then', function(done) {
+      var failingStep = function () {
+        var defer = oath.defer();
+        defer.reject('Oops!');
+        return defer.promise;
+      };
+
+      var didItRun = false;
+      var shouldntRun = function (num) {
+        var defer = oath.defer();
+        didItRun = true;
+        setTimeout(_.partial(defer.resolve.bind(defer), num), 5);
+        return defer.promise;
+      };
+      failingStep().then(shouldntRun).catch(function(err) {
+        expect(didItRun).to.equal(false);
+        done();
+      });
+    });
+
   });
 });
